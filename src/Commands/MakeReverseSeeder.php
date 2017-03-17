@@ -44,21 +44,33 @@ class MakeReverseSeeder extends Command
 
         $columns = $this->setColumns($tableName);
         $rows = $this->getRows($tableName);
-        $string = $this->arrayToString($rows, $columns);
+        $string = $this->rowsToString($rows, $columns);
         $txt = $this->replaceStub($seederName, $seederVariableName, $tableName, $string);
         $this->saveFile($seedsPath, $seederName, $txt);
     }
 
+    /**
+     * Get table column names.
+     *
+     * @param string $tableName
+     * @return array
+     */
     private function getColumns($tableName)
     {
         return \DB::connection()->getSchemaBuilder()->getColumnListing($tableName);
     }
 
+    /**
+     * Set table columns.
+     *
+     * @param string $tableName
+     * @return array
+     */
     private function setColumns($tableName)
     {
         $excepts = $this->option('except');
         $tmpColumns = $this->getColumns($tableName);
-        if (isset( $excepts )) {
+        if (isset($excepts)) {
             $excepColumnsArray = explode(',', $excepts);
             foreach ($tmpColumns as $tmpColumn) {
                 if ((!in_array($tmpColumn, $excepColumnsArray))) {
@@ -73,10 +85,12 @@ class MakeReverseSeeder extends Command
     }
 
     /**
-     * @param $tableName
-     * @return mixed
+     * Get rows from a table name.
+     *
+     * @param string $tableName
+     * @return array
      */
-    public function getRows($tableName)
+    private function getRows($tableName)
     {
         $fromColumn = $this->option('from_column');
         $fromDate = $this->option('from_date');
@@ -90,13 +104,16 @@ class MakeReverseSeeder extends Command
     }
 
     /**
-     * @param $rows
-     * @param $columns
+     * DB Rows to array string.
+     *
+     * @param array $rows
+     * @param array $columns
      * @return string
      */
-    public function arrayToString($rows, $columns)
+    private function rowsToString($rows, $columns)
     {
         $string = "";
+
         foreach ($rows as $key => $row) {
             $string .= "\n\t\t\t[";
             foreach ($columns as $column) {
@@ -116,22 +133,26 @@ class MakeReverseSeeder extends Command
     }
 
     /**
+     * Get stub.
+     *
      * @return string
      */
-    public function getStub()
+    private function getStub()
     {
         $txt = file_get_contents(__DIR__ . '/SeederStub.stub') or die("Unable to open file!");
         return $txt;
     }
 
     /**
-     * @param $stub
-     * @param $seederName
-     * @param $seederVariableName
-     * @param $tableName
+     * Replace stub with variables.
+     *
+     * @param string $stub
+     * @param string $seederName
+     * @param string $seederVariableName
+     * @param string $tableName
      * @param $string
      */
-    public function replaceStub($seederName, $seederVariableName, $tableName, $string)
+    private function replaceStub($seederName, $seederVariableName, $tableName, $string)
     {
         $stub = $this->getStub();
         $stub = str_replace('{SEEDER_NAME}', $seederName, $stub);
@@ -142,11 +163,13 @@ class MakeReverseSeeder extends Command
     }
 
     /**
-     * @param $seedsPath
-     * @param $seederName
-     * @param $txt
+     * Save replaced stub as seeder.
+     *
+     * @param string $seedsPath
+     * @param string $seederName
+     * @param string $txt
      */
-    public function saveFile($seedsPath, $seederName, $txt)
+    private function saveFile($seedsPath, $seederName, $txt)
     {
         $path = database_path($seedsPath . $seederName . '.php');
         $file = fopen($path, "w") or die("Unable to open file!");
