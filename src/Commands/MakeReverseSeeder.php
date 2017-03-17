@@ -10,7 +10,7 @@ class MakeReverseSeeder extends Command
      *
      * @var string
      */
-    protected $signature = 'make:reverseSeeder {table_name} {--date} {--except}';
+    protected $signature = 'make:reverseSeeder {table_name} {--from_column=} {--from_date=} {--except=}';
 
     /**
      * The console command description.
@@ -38,24 +38,121 @@ class MakeReverseSeeder extends Command
     {
         $seedsPath = 'seeds/';
 
-        $fromDate = $this->option('date');
-        $exceptColumns = $this->option('except');
-
-        $tableName = ucfirst($this->argument('table_name'));
-        $seederName = studly_case($tableName).'TableSeeder';
+        $tableName = lcfirst($this->argument('table_name'));
+        $seederName = studly_case($tableName) . 'TableSeeder';
         $seederVariableName = camel_case($tableName);
 
-        $txt = file_get_contents(__DIR__.'/SeederStub.stub') or die("Unable to open file!");
+        $columns = $this->setColumns($tableName);
+        $rows = $this->getRows($tableName);
+        $string = $this->arrayToString($rows, $columns);
+        $txt = $this->replaceStub($seederName, $seederVariableName, $tableName, $string);
+        $this->saveFile($seedsPath, $seederName, $txt);
+    }
 
-        $txt = str_replace('{SEEDER_NAME}', $seederName, $txt);
-        $txt = str_replace('{SEEDER_VARIABLE_NAME}', $seederVariableName, $txt);
-        $txt = str_replace('{TABLE_NAME}', $tableName, $txt);
+    private function getColumns($tableName)
+    {
+        return \DB::connection()->getSchemaBuilder()->getColumnListing($tableName);
+    }
 
-        $path = database_path($seedsPath.$seederName.'.php');
+    private function setColumns($tableName)
+    {
+        $excepts = $this->option('except');
+        $tmpColumns = $this->getColumns($tableName);
+        if (isset( $excepts )) {
+            $excepColumnsArray = explode(',', $excepts);
+            foreach ($tmpColumns as $tmpColumn) {
+                if ((!in_array($tmpColumn, $excepColumnsArray))) {
+                    $columns[] = $tmpColumn;
+                }
+            }
+        } else {
+            $columns = $tmpColumns;
+        }
+
+        return $columns;
+    }
+
+    /**
+     * @param $tableName
+     * @return mixed
+     */
+    public function getRows($tableName)
+    {
+        $fromColumn = $this->option('from_column');
+        $fromDate = $this->option('from_date');
+        if (isset($fromDate) && isset($fromColumn)) {
+            $rows = \DB::table($tableName)->where($fromColumn, '>', $fromDate)->get();
+            return $rows;
+        } else {
+            $rows = \DB::table($tableName)->get();
+            return $rows;
+        }
+    }
+
+    /**
+     * @param $rows
+     * @param $columns
+     * @return string
+     */
+    public function arrayToString($rows, $columns)
+    {
+        $string = "";
+        foreach ($rows as $key => $row) {
+            $string .= "\n\t\t\t[";
+            foreach ($columns as $column) {
+                if (!isset($row->$column)) {
+                    $value = 'NULL';
+                } else if (is_int($column)) {
+                    $value = (int) $column;
+                } else {
+                    $value = "'" . $row->$column . "'";
+                }
+
+                $string .= "'$column' => " . $value . ", ";
+            }
+            $string .= "],";
+        }
+        return $string;
+    }
+
+    /**
+     * @return string
+     */
+    public function getStub()
+    {
+        $txt = file_get_contents(__DIR__ . '/SeederStub.stub') or die("Unable to open file!");
+        return $txt;
+    }
+
+    /**
+     * @param $stub
+     * @param $seederName
+     * @param $seederVariableName
+     * @param $tableName
+     * @param $string
+     */
+    public function replaceStub($seederName, $seederVariableName, $tableName, $string)
+    {
+        $stub = $this->getStub();
+        $stub = str_replace('{SEEDER_NAME}', $seederName, $stub);
+        $stub = str_replace('{SEEDER_VARIABLE_NAME}', $seederVariableName, $stub);
+        $stub = str_replace('{TABLE_NAME}', $tableName, $stub);
+        $stub = str_replace('{ARRAY}', $string, $stub);
+        return $stub;
+    }
+
+    /**
+     * @param $seedsPath
+     * @param $seederName
+     * @param $txt
+     */
+    public function saveFile($seedsPath, $seederName, $txt)
+    {
+        $path = database_path($seedsPath . $seederName . '.php');
         $file = fopen($path, "w") or die("Unable to open file!");
         fwrite($file, $txt);
         fclose($file);
-
-        $this->info($seederName.' named seeder created in seeds folder.');
+        $this->info($seederName . ' named seeder created in seeds folder.');
     }
+
 }

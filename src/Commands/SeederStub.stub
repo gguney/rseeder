@@ -11,8 +11,7 @@ class {SEEDER_NAME} extends Seeder
      */
     public function run()
     {
-        ${SEEDER_VARIABLE_NAME} = [
-            ['id'=>1],
+        ${SEEDER_VARIABLE_NAME} = [{ARRAY}
         ];
         DB::table('{TABLE_NAME}')->insert(${SEEDER_VARIABLE_NAME});
     }
