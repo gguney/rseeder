@@ -1,0 +1,30 @@
+{
+    "name": "gguney/rseeder",
+    "type": "library",
+    "description": "Reverse Seeder for Laravel",
+    "keywords": ["Database", "Reverse", "Seeder"],
+    "homepage": "https://github.com/gguney/rseeder",
+    "license": "MIT",
+    "minimum-stability": "dev",
+    "authors": [
+        {
+            "name": "Gokhan Guney",
+            "email": "gokhanguneygg@gmail.com",
+            "homepage": "http://gguney.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.6"
+    },
+    "require-dev": {
+        "php": ">=5.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "GGuney\\RSeeder\\": "src/"
+        }
+    }
+}
+
+
+

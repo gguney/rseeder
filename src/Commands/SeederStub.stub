@@ -1,0 +1,19 @@
+<?php
+
+use Illuminate\Database\Seeder;
+
+class {SEEDER_NAME} extends Seeder
+{
+    /**
+     * Run the database seeds.
+     *
+     * @return void
+     */
+    public function run()
+    {
+        ${SEEDER_VARIABLE_NAME} = [
+            ['id'=>1],
+        ];
+        DB::table('{TABLE_NAME}')->insert(${SEEDER_VARIABLE_NAME});
+    }
+}
