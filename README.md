@@ -11,14 +11,35 @@ Reverse Seeder Library for Laravel
 ```bash
 $ composer require gguney/rseeder
 ```
-
-### Usage
 Add package's service provider to your config/app.php
 
 ```php
 ...
         GGuney\RSeeder\RSeederServiceProvider::class,
 ...
+```
+### Usage
+```bash
+$ php artisan make:reverseSeeder table_name
+```
+If you want to get rows from a date, you can use like:
+```bash
+$ php artisan make:reverseSeeder table_name --from_column=created_at --from_date=1990-01-22
+```
+
+Also, you can ignore some columns:
+```bash
+$ php artisan make:reverseSeeder table_name --except=id,is_created 
+```
+All together:
+
+```bash
+$ php artisan make:reverseSeeder food_orders --from_column=created_at --from_date=2017-03-17 --except=id
+```
+
+Output:
+```bash
+$ FoodOrdersTableSeeder named seeder created in seeds folder.
 ```
 
 ### Author
