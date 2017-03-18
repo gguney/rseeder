@@ -23,8 +23,9 @@ Add package's service provider to your config/app.php
 $ php artisan make:reverseSeeder table_name
 ```
 If you want to get rows from a date, you can use like:
+######Warning: From date will not be included.
 ```bash
-$ php artisan make:reverseSeeder table_name --from_column=created_at --from_date=1990-01-22
+$ php artisan make:reverseSeeder table_name --from=1990-01-22 --by=created_at
 ```
 
 Also, you can ignore some columns:
@@ -34,7 +35,7 @@ $ php artisan make:reverseSeeder table_name --except=id,is_created
 All together:
 
 ```bash
-$ php artisan make:reverseSeeder food_orders --from_column=created_at --from_date=2017-03-17 --except=id
+$ php artisan make:reverseSeeder food_orders --from=2017-03-17 --by=created_at --except=id
 ```
 
 Output:

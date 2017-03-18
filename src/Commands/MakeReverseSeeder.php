@@ -10,7 +10,7 @@ class MakeReverseSeeder extends Command
      *
      * @var string
      */
-    protected $signature = 'make:reverseSeeder {table_name} {--from_column=} {--from_date=} {--except=}';
+    protected $signature = 'make:reverseSeeder {table_name} {--from=} {--by=} {--except=}';
 
     /**
      * The console command description.
@@ -57,7 +57,9 @@ class MakeReverseSeeder extends Command
      */
     private function getColumns($tableName)
     {
-        return \DB::connection()->getSchemaBuilder()->getColumnListing($tableName);
+        return \DB::connection()
+                  ->getSchemaBuilder()
+                  ->getColumnListing($tableName);
     }
 
     /**
@@ -92,13 +94,16 @@ class MakeReverseSeeder extends Command
      */
     private function getRows($tableName)
     {
-        $fromColumn = $this->option('from_column');
-        $fromDate = $this->option('from_date');
+        $fromColumn = $this->option('by');
+        $fromDate = $this->option('from');
         if (isset($fromDate) && isset($fromColumn)) {
-            $rows = \DB::table($tableName)->where($fromColumn, '>', $fromDate)->get();
+            $rows = \DB::table($tableName)
+                       ->where($fromColumn, '>', $fromDate)
+                       ->get();
             return $rows;
         } else {
-            $rows = \DB::table($tableName)->get();
+            $rows = \DB::table($tableName)
+                       ->get();
             return $rows;
         }
     }
@@ -113,24 +118,26 @@ class MakeReverseSeeder extends Command
     private function rowsToString($rows, $columns)
     {
         $string = "";
-
         foreach ($rows as $key => $row) {
             $string .= "\n\t\t\t[";
             foreach ($columns as $column) {
-                if (!isset($row->$column)) {
+                if (filter_var($row->$column, FILTER_VALIDATE_INT) || filter_var($row->$column, FILTER_VALIDATE_FLOAT)) {
+                    $value = $row->$column;
+                } else if (!isset($row->$column)) {
                     $value = 'NULL';
-                } else if (is_int($column)) {
-                    $value = (int) $column;
                 } else {
                     $value = "'" . $row->$column . "'";
                 }
-
                 $string .= "'$column' => " . $value . ", ";
             }
+            $string = rtrim($string,', ');
             $string .= "],";
         }
+
         return $string;
+
     }
+
 
     /**
      * Get stub.
