@@ -35,7 +35,7 @@ $ php artisan make:reverseSeeder table_name --except=id,is_created
 All together:
 
 ```bash
-$ php artisan make:reverseSeeder food_orders --from=2017-03-17 --by=created_at --except=id
+$ php artisan make:reverseSeeder food_orders --from='2017-03-17 10:00:00' --by=created_at --except=id
 ```
 
 Output:
