@@ -23,6 +23,13 @@
         "psr-4": {
             "GGuney\\RSeeder\\": "src/"
         }
+    },
+    "extra":{
+        "laravel":{
+            "providers": [
+                "GGuney\\RSeeder\\RSeederServiceProvider"
+            ]
+        }
     }
 }
 
