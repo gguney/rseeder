@@ -126,8 +126,9 @@ class MakeReverseSeeder extends Command
                 } else if (!isset($row->$column)) {
                     $value = 'NULL';
                 } else {
-                    $value = "'" . $row->$column . "'";
+                    $value = "'" . str_replace("'","\'",$row->$column) . "'";
                 }
+
                 $string .= "'$column' => " . $value . ", ";
             }
             $string = rtrim($string,', ');
