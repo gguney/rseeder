@@ -2,6 +2,7 @@
 namespace GGuney\RSeeder\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Str;
 
 class MakeReverseSeeder extends Command
 {
@@ -39,8 +40,8 @@ class MakeReverseSeeder extends Command
         $seedsPath = 'seeds/';
 
         $tableName = lcfirst($this->argument('table_name'));
-        $seederName = studly_case($tableName) . 'TableSeeder';
-        $seederVariableName = camel_case($tableName);
+        $seederName = Str::studly($tableName) . 'TableSeeder';
+        $seederVariableName = Str::camel($tableName);
 
         $columns = $this->setColumns($tableName);
         $rows = $this->getRows($tableName);
@@ -126,9 +127,8 @@ class MakeReverseSeeder extends Command
                 } else if (!isset($row->$column)) {
                     $value = 'NULL';
                 } else {
-                    $value = "'" . str_replace("'","\'",$row->$column) . "'";
+                    $value = "'" . $row->$column . "'";
                 }
-
                 $string .= "'$column' => " . $value . ", ";
             }
             $string = rtrim($string,', ');
