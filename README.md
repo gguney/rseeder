@@ -5,6 +5,7 @@ Reverse Seeder Library for Laravel
 ### Requirements
 
 - RSeeder works with PHP8 or above.
+- If you have older version of Laravel please check 1.x
 
 ### Installation
 
