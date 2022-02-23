@@ -1,6 +1,6 @@
 # RSeeder - Reverse Seeder for Laravel
 
-Reverse Seeder Library for Laravel
+This package creates Laravel seeders from present data in your database table.
 
 ### Requirements
 
