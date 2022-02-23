@@ -1,23 +1,17 @@
-# RSeeder - Reverse Seeder Library
+# RSeeder - Reverse Seeder for Laravel
 
 Reverse Seeder Library for Laravel
 
 ### Requirements
 
-- RSeeder works with PHP 5.6 or above.
+- RSeeder works with PHP8 or above.
 
 ### Installation
 
 ```bash
 $ composer require gguney/rseeder
 ```
-Add package's service provider to your config/app.php
 
-```php
-...
-        GGuney\RSeeder\RSeederServiceProvider::class,
-...
-```
 ### Usage
 ```bash
 $ php artisan make:reverseSeeder table_name

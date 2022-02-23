@@ -1,7 +1,10 @@
 <?php
+
 namespace GGuney\RSeeder\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class MakeReverseSeeder extends Command
@@ -37,7 +40,7 @@ class MakeReverseSeeder extends Command
      */
     public function handle()
     {
-        $seedsPath = 'seeds/';
+        $seedersPath = 'seeders/';
 
         $tableName = lcfirst($this->argument('table_name'));
         $seederName = Str::studly($tableName) . 'TableSeeder';
@@ -47,34 +50,35 @@ class MakeReverseSeeder extends Command
         $rows = $this->getRows($tableName);
         $string = $this->rowsToString($rows, $columns);
         $txt = $this->replaceStub($seederName, $seederVariableName, $tableName, $string);
-        $this->saveFile($seedsPath, $seederName, $txt);
+        $this->saveFile($seedersPath, $seederName, $txt);
     }
 
     /**
      * Get table column names.
      *
-     * @param string $tableName
+     * @param  string  $tableName
      * @return array
      */
-    private function getColumns($tableName)
+    private function getColumns(string $tableName): array
     {
-        return \DB::connection()
-                  ->getSchemaBuilder()
-                  ->getColumnListing($tableName);
+        return DB::connection()->getSchemaBuilder()->getColumnListing($tableName);
     }
 
     /**
      * Set table columns.
      *
-     * @param string $tableName
+     * @param  string  $tableName
      * @return array
      */
-    private function setColumns($tableName)
+    private function setColumns(string $tableName): array
     {
         $excepts = $this->option('except');
         $tmpColumns = $this->getColumns($tableName);
+        $columns = [];
+
         if (isset($excepts)) {
             $excepColumnsArray = explode(',', $excepts);
+
             foreach ($tmpColumns as $tmpColumn) {
                 if ((!in_array($tmpColumn, $excepColumnsArray))) {
                     $columns[] = $tmpColumn;
@@ -90,100 +94,104 @@ class MakeReverseSeeder extends Command
     /**
      * Get rows from a table name.
      *
-     * @param string $tableName
-     * @return array
+     * @param  string  $tableName
+     * @return Collection
      */
-    private function getRows($tableName)
+    private function getRows(string $tableName): Collection
     {
         $fromColumn = $this->option('by');
         $fromDate = $this->option('from');
-        if (isset($fromDate) && isset($fromColumn)) {
-            $rows = \DB::table($tableName)
-                       ->where($fromColumn, '>', $fromDate)
-                       ->get();
-            return $rows;
-        } else {
-            $rows = \DB::table($tableName)
-                       ->get();
-            return $rows;
-        }
+
+        return isset($fromDate) && isset($fromColumn) ?
+            DB::table($tableName)->where($fromColumn, '>', $fromDate)->get() :
+            DB::table($tableName)->get();
     }
 
     /**
      * DB Rows to array string.
      *
-     * @param array $rows
-     * @param array $columns
+     * @param  Collection  $rows
+     * @param  array  $columns
      * @return string
      */
-    private function rowsToString($rows, $columns)
+    private function rowsToString(Collection $rows, array $columns): string
     {
-        $string = "";
-        foreach ($rows as $key => $row) {
-            $string .= "\n\t\t\t[";
+        $rowsAsString = "";
+
+        foreach ($rows as $row) {
+            $rowsAsString .= "\n\t\t\t[";
+
             foreach ($columns as $column) {
-                if (filter_var($row->$column, FILTER_VALIDATE_INT) || filter_var($row->$column, FILTER_VALIDATE_FLOAT)) {
+                if (
+                    filter_var($row->$column, FILTER_VALIDATE_INT) ||
+                    filter_var($row->$column, FILTER_VALIDATE_FLOAT)
+                ) {
                     $value = $row->$column;
-                } else if (!isset($row->$column)) {
-                    $value = 'NULL';
                 } else {
-                    $value = "'" . str_replace("'","\'",$row->$column) . "'";
+                    if (!isset($row->$column)) {
+                        $value = 'NULL';
+                    } else {
+                        $value = "'" . str_replace("'", "\'", $row->$column) . "'";
+                    }
                 }
-                $string .= "'$column' => " . $value . ", ";
+
+                $rowsAsString .= "'$column' => " . $value . ", ";
             }
-            $string = rtrim($string,', ');
-            $string .= "],";
+
+            $rowsAsString = rtrim($rowsAsString, ', ') . "],";
         }
 
-        return $string;
-
+        return $rowsAsString;
     }
-
 
     /**
      * Get stub.
      *
      * @return string
      */
-    private function getStub()
+    private function getStub(): string
     {
-        $txt = file_get_contents(__DIR__ . '/SeederStub.stub') or die("Unable to open file!");
-        return $txt;
+        if ($content = file_get_contents(__DIR__ . '/SeederStub.stub')) {
+            return $content;
+        }
+
+        return die("Unable to open file!");
     }
 
     /**
      * Replace stub with variables.
      *
-     * @param string $stub
-     * @param string $seederName
-     * @param string $seederVariableName
-     * @param string $tableName
-     * @param $string
+     * @param  string  $seederName
+     * @param  string  $seederVariableName
+     * @param  string  $tableName
+     * @param  string  $rows
      */
-    private function replaceStub($seederName, $seederVariableName, $tableName, $string)
-    {
-        $stub = $this->getStub();
-        $stub = str_replace('{SEEDER_NAME}', $seederName, $stub);
-        $stub = str_replace('{SEEDER_VARIABLE_NAME}', $seederVariableName, $stub);
-        $stub = str_replace('{TABLE_NAME}', $tableName, $stub);
-        $stub = str_replace('{ARRAY}', $string, $stub);
-        return $stub;
+    private function replaceStub(
+        string $seederName,
+        string $seederVariableName,
+        string $tableName,
+        string $rows
+    ): string {
+        return str_replace(
+            ['{SEEDER_NAME}', '{SEEDER_VARIABLE_NAME}', '{TABLE_NAME}', '{ARRAY}'],
+            [$seederName, $seederVariableName, $tableName, $rows],
+            $this->getStub()
+        );
     }
 
     /**
      * Save replaced stub as seeder.
      *
-     * @param string $seedsPath
-     * @param string $seederName
-     * @param string $txt
+     * @param  string  $seedersPath
+     * @param  string  $seederName
+     * @param  string  $content
      */
-    private function saveFile($seedsPath, $seederName, $txt)
+    private function saveFile(string $seedersPath, string $seederName, string $content): void
     {
-        $path = database_path($seedsPath . $seederName . '.php');
+        $path = database_path($seedersPath . $seederName . '.php');
         $file = fopen($path, "w") or die("Unable to open file!");
-        fwrite($file, $txt);
+        fwrite($file, $content);
         fclose($file);
         $this->info($seederName . ' named seeder created in seeds folder.');
     }
-
 }

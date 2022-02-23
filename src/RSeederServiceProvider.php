@@ -5,9 +5,7 @@ use Illuminate\Support\ServiceProvider;
 
 class RSeederServiceProvider extends ServiceProvider
 {
-    protected $commands = [
-        'GGuney\RSeeder\Commands\MakeReverseSeeder'
-    ];
+    protected array $commands = ['GGuney\RSeeder\Commands\MakeReverseSeeder'];
 
     /**
      * Register the service provider.
@@ -21,7 +19,6 @@ class RSeederServiceProvider extends ServiceProvider
 
     public function boot()
     {
-
+        //
     }
-
 }
